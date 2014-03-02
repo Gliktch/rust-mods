@@ -1,14 +1,14 @@
-PLUGIN.Title = "Mods Information"
+PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
 PLUGIN.Version = "0.3"
 PLUGIN.Description = "Displays a list of mods running on the server, and their basic settings."
 
 function PLUGIN:Init()
-  print("Loading Mods Information mod...")
-  self:AddChatCommand( "mods", self.cmdMods )
-  self:CollectValues()
-  if (modstimer) then modstimer:Destroy() end
-  modstimer = timer.Repeat( 15, self.CollectValues )
+    print("Loading Mod Information...")
+    self:AddChatCommand( "mods", self.cmdMods )
+    self:CollectValues()
+    if (modstimer) then modstimer:Destroy() end
+    modstimer = timer.Repeat( 15, self.CollectValues )
 end
 
 function PLUGIN:UpdateCheck( modname, netuser, frominit )
@@ -16,7 +16,6 @@ function PLUGIN:UpdateCheck( modname, netuser, frominit )
     if (modname.ResourceID) then
         -- Get latest version from URL
         local url = "http://wulf.im/oxide/" .. modname.ResourceID
-        --local url = "http://forum.rustoxide.com/api.php?action=getResource&value=" .. self.ResourceID
         local request = webrequest.Send(url, function(code, response)
             -- Check for HTTP success
             if (code == 200) then
@@ -51,12 +50,6 @@ end
 
 function PLUGIN:CollectValues()
 
-	flags_plugin = plugins.Find("flags")
-	if (not flags_plugin) then
-
-		return
-	end
-
  -- Main server info
   hostname = Rust.server.hostname
   hostip   = Rust.server.ip
@@ -66,7 +59,6 @@ function PLUGIN:CollectValues()
   sleep    = Rust.sleepers.on
   pvp      = Rust.server.pvp
   craftin  = Rust.crafting.instant
---  craftin  = assert(tostring(Rust.crafting.instant) or function() if Rust.crafting.instant == false then return "false" else return "unset" end end
 
 -- Further useful settings
   maxplay  = Rust.server.maxplayers
@@ -90,6 +82,23 @@ function PLUGIN:CollectValues()
   legstime = Rust.falldamage.injury_length
   locktime = Rust.player.backpackLockTime
   autotime = Rust.save.autosavetime
+
+end
+
+function PLUGIN:ListMods( netuser, args )
+    -- Enumerate installed mods and fetch versions
+    -- Completely not tested yet, likely not working
+    local i = 0
+    for i, #plugins.Count
+        print(plugins.Find(i).Title .. " v" .. plugins.Find(i).Version .. " (" .. tostring(plugins.Find(i)) .. ".lua)")
+    end
+end
+
+function PLUGIN:CheckAll( netuser, args, frominit )
+    local i = 0
+    for i, #plugins.Count
+        UpdateCheck( tostring(plugins.Find(i)), netuser, frominit )
+    end
 end
 
 function toboolean(var)
