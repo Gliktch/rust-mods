@@ -1,6 +1,6 @@
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
-PLUGIN.Version = "0.3"
+PLUGIN.Version = "0.4"
 PLUGIN.Description = "Displays a list of mods running on the server, and their basic settings."
 
 function PLUGIN:Init()
