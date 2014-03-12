@@ -1,14 +1,25 @@
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
-PLUGIN.Version = "0.3"
-PLUGIN.Description = "Displays a list of mods running on the server, and their basic settings."
+PLUGIN.Version = "0.3.4"
+PLUGIN.Description = "Displays a list of mods running on the server, their versions and basic settings."
 
 function PLUGIN:Init()
     print("Loading Mod Information...")
+    
+    self.ModsDataFile = util.GetDatafile( "modsdata" )
+	local txt = self.ModsDataFile:GetText()
+	if (txt ~= "") then
+        self.ModsData = json.decode( txt )
+	else
+		self.ModsData = {}
+		self:Save();
+	end
     self:AddChatCommand( "mods", self.cmdMods )
-    self:CollectValues()
     if (modstimer) then modstimer:Destroy() end
-    modstimer = timer.Repeat( 15, self.CollectValues )
+    modstimer = timer.Once( 3, self.CollectValues )
+    -- modstimer = timer.Repeat( 15, self.CollectValues )
+    -- self:CollectValues()
+    -- self:CheckAll()
 end
 
 function PLUGIN:UpdateCheck( modname, netuser, frominit )
@@ -48,26 +59,39 @@ function PLUGIN:UpdateCheck( modname, netuser, frominit )
     end
 end
 
-function PLUGIN:CollectValues()
-
--- to do
-
-end
-
-function PLUGIN:ListMods( netuser, args )
-    -- Enumerate installed mods and fetch versions
-    -- Completely not tested yet, likely not working
-    local i = 0
-    for i, #plugins.Count
-        print(plugins.Find(i).Title .. " v" .. plugins.Find(i).Version .. " (" .. tostring(plugins.Find(i)) .. ".lua)")
-    end
-end
-
 function PLUGIN:CheckAll( netuser, args, frominit )
     local i = 0
-    for i, #plugins.Count
+    for i, #self.ModsData.mods
         UpdateCheck( tostring(plugins.Find(i)), netuser, frominit )
     end
+end
+
+function PLUGIN:Save()
+	self.ModsDataFile:SetText( json.encode( self.ModsData ) )
+	self.ModsDataFile:Save()
+end
+
+function PLUGIN:CollectValues()
+    typesystem.LoadNamespace( "Oxide" )
+    local sgetter, ssetter = typesystem.GetField( Oxide.Main, "singleton", bf.private_static )
+    local oxidemain = sgetter( nil )
+    local pluginsystem = oxidemain.PluginManager
+    local en = pluginsystem:GetPlugins():GetEnumerator()
+    local lastmod = "xyz"
+    local currentmod = ""
+    local counter = 0
+    local tmp = {}
+    en:MoveNext()
+    while ((en.Current) and (lastmod ~= currentmod) and (counter < 50)) do
+        tmp[ #tmp + 1 ] = en.Current
+        print("Mod Info: " .. tostring(en.Current.Title) .. " v" .. tostring(en.Current.Version))
+        lastmod = en.Current.Name
+        en:MoveNext()
+        currentmod = en.Current.Name
+        counter = counter + 1
+    end
+    self.ModsData.mods = json.encode(tmp)
+    self:Save()
 end
 
 function toboolean(var)
