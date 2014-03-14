@@ -1,5 +1,3 @@
-PLUGIN = {}
-Rust = {}
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
 PLUGIN.Version = "0.5.3"
