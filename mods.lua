@@ -1,6 +1,6 @@
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
-PLUGIN.Version = "0.5.3"
+PLUGIN.Version = "0.5.7"
 PLUGIN.Description = "Displays a list of mods running on the server, their versions and basic settings."
 
 function PLUGIN:Init()
@@ -26,8 +26,12 @@ function PLUGIN:PostInit()
 end
 
 function PLUGIN:CollectValues()
-    local sincelast = self:TimeCalc(self:round((System.DateTime.Now.Ticks - 621355968000000000) / 10000000) - ModsData.LastUpdated)
-    print("Mods last checked " .. tostring(sincelast) .. " ago.")
+    if (ModsData.LastUpdated) then
+        local sincelast = TimeCalc(round((System.DateTime.Now.Ticks - 621355968000000000) / 10000000) - ModsData.LastUpdated)
+        print("Mod Information: Mods last checked " .. tostring(sincelast) .. " ago.")
+    else
+        print("Mod Information: Unknown time since last mods check.")
+    end
     typesystem.LoadNamespace( "Oxide" )
     local sgetter, ssetter = typesystem.GetField( Oxide.Main, "singleton", bf.private_static )
     local oxidemain = sgetter( nil )
@@ -54,7 +58,7 @@ function PLUGIN:CollectValues()
         en:MoveNext()
         currentmod = en.Current.Name
     end
-    ModsData.LastUpdated = self:round((System.DateTime.Now.Ticks - 621355968000000000) / 10000000)
+    ModsData.LastUpdated = round((System.DateTime.Now.Ticks - 621355968000000000) / 10000000)
     ModsData.LastUpdatedText = tostring(System.DateTime.Now)
     local ModsJson = json.encode( ModsData )
     ModsDataFile:SetText( ModsJson )
@@ -75,7 +79,7 @@ function PLUGIN:UpdateCheck( modtable, netuser, frominit )
                     if (modtable.Version < response) then
                         error("Outdated plugin \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ")! Installed: v" .. modtable.Version .. ", Latest: v" .. response)
                         error("Visit http://forum.rustoxide.com/resources/" .. modtable.ResourceID .. "/ to download the latest version!")
-                        blahtimer = timer.Once( 30, function() Rust.BroadcastChat("Alert: \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ") has an update available, from v" .. modtable.Version .. " to v" .. response .. ".") end )
+                        blahtimer = timer.Once( 30, function() rust.BroadcastChat("Alert: \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ") has an update available, from v" .. modtable.Version .. " to v" .. response .. ".") end )
                     else
                         if self.Config.verboseUpdateChecks then
                             print("Mod \"" .. modtable.Title .. "\" v" .. modtable.Version .. " (filename " .. modtable.ShortFilename .. ") has been verified as up to date (latest version reported as v" .. response .. ").")
@@ -93,9 +97,9 @@ function PLUGIN:UpdateCheck( modtable, netuser, frominit )
             errmsg = "Alert: Update Check Failed for \"" .. tostring(modtable.Title) .. "\" (filename " .. tostring(modtable.ShortFilename) .. ") v" .. tostring(modtable.Version) .. "."
             -- Broadcast error if from server start, or send to user if from command
             if frominit then
-                ModUpdateFailTimer = timer.Repeat( 60, 3, function() Rust.BroadcastChat( errmsg ) end )
+                ModUpdateFailTimer = timer.Repeat( 60, 3, function() rust.BroadcastChat( errmsg ) end )
             else
-               Rust.SendChatToUser( netuser, errmsg )
+               rust.SendChatToUser( netuser, errmsg )
             end
             -- Print to server log if not successful
             error("Update check failed for mod " .. tostring(modtable.Title) .. " with ID " .. tostring(modtable.ResourceID) .. "!")
@@ -109,7 +113,7 @@ function PLUGIN:CheckAll( netuser, args, frominit )
     end
 end
 
-function PLUGIN:TimeCalc(tsecs)
+function TimeCalc(tsecs)
   if tsecs == 0 then
     return "just now"
   elseif tsecs < 60 then
@@ -134,7 +138,7 @@ function PLUGIN:toboolean(var)
   return not not var
 end
 
-function PLUGIN:round(num, dec)
+function round(num, dec)
   local pow = 10^(dec or 0)
   return math.floor(num * pow + 0.5) / pow
 end
@@ -148,6 +152,6 @@ function PLUGIN:cmdMods( netuser, args )
       end
     end
   else
-    Rust.SendChatToUser( netuser, "You need to specify a mod name, or put \"all\"" )
+    rust.SendChatToUser( netuser, "You need to specify a mod name, or put \"all\"" )
   end
 end
