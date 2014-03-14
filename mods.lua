@@ -1,10 +1,10 @@
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
-PLUGIN.Version = "0.5.3"
+PLUGIN.Version = "0.5.4"
 PLUGIN.Description = "Displays a list of mods running on the server, their versions and basic settings."
 
 function PLUGIN:Init()
-    print("Loading " .. self.Title .. " v" .. self.Version .. ", by " .. self.Author ... "...")
+    print("Loading " .. self.Title .. " v" .. self.Version .. ", by " .. self.Author .. "...")
     ModsDataFile = util.GetDatafile( "modsdata" )
     local txt = ModsDataFile:GetText()
     if (txt ~= "") then
@@ -75,10 +75,11 @@ function PLUGIN:UpdateCheck( modtable, netuser, frominit )
                     if (modtable.Version < response) then
                         error("Outdated plugin \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ")! Installed: v" .. modtable.Version .. ", Latest: v" .. response)
                         error("Visit http://forum.rustoxide.com/resources/" .. modtable.ResourceID .. "/ to download the latest version!")
-                        assert(modtable.Name .. "UpdateAlertTimer") = timer.Once( 30, function() Rust.BroadcastChat("Alert: \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ") has an update available, from v" .. modtable.Version .. " to v" .. response .. ".") end )
+                        blahtimer = timer.Once( 30, function() Rust.BroadcastChat("Alert: \"" .. modtable.Title .. "\" (filename " .. modtable.ShortFilename .. ") has an update available, from v" .. modtable.Version .. " to v" .. response .. ".") end )
                     else
-                        if self.Config.verboseUpdateChecks
+                        if self.Config.verboseUpdateChecks then
                             print("Mod \"" .. modtable.Title .. "\" v" .. modtable.Version .. " (filename " .. modtable.ShortFilename .. ") has been verified as up to date (latest version reported as v" .. response .. ").")
+                        end
                     end
                 -- If being called from within the /mods command, return the information internally
                 else
@@ -91,16 +92,19 @@ function PLUGIN:UpdateCheck( modtable, netuser, frominit )
         if ((not request) or (updatefailed)) then
             errmsg = "Alert: Update Check Failed for \"" .. tostring(modtable.Title) .. "\" (filename " .. tostring(modtable.ShortFilename) .. ") v" .. tostring(modtable.Version) .. "."
             -- Broadcast error if from server start, or send to user if from command
-            if frominit and assert(modtable.ShortFilename .. "UpdateFailTimer") = timer.Repeat( 60, 3, function() Rust.BroadcastChat( errmsg ) end ) or Rust.SendChatToUser( netuser, errmsg )
+            if frominit then
+                ModUpdateFailTimer = timer.Repeat( 60, 3, function() Rust.BroadcastChat( errmsg ) end )
+            else
+               Rust.SendChatToUser( netuser, errmsg )
+            end
             -- Print to server log if not successful
-           error("Update check failed for mod " .. tostring(modtable.Title) .. " with ID " .. tostring(modtable.ResourceID) .. "!")
+            error("Update check failed for mod " .. tostring(modtable.Title) .. " with ID " .. tostring(modtable.ResourceID) .. "!")
         end
     end
 end
 
 function PLUGIN:CheckAll( netuser, args, frominit )
-    local i = 0
-    for i, #self.ModsData.mods
+    for i = 0, #self.ModsData.mods do
         self:UpdateCheck( self.ModsData.mods[i], netuser, true )
     end
 end
@@ -138,8 +142,7 @@ end
 function PLUGIN:cmdMods( netuser, args )
 -- plenty more to do
   if args[1] then
-    local i = 0
-    for i, #self.ModsData.mods
+    for i = 0, #self.ModsData.mods do
       if self.ModsData.mods[i].Name == args[1] then
           self:UpdateCheck(self.ModsData.mods[i], netuser, false)
       end
