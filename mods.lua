@@ -1,6 +1,8 @@
+PLUGIN = {}
+Rust = {}
 PLUGIN.Title = "Mod Information"
 PLUGIN.Author = "Gliktch"
-PLUGIN.Version = "0.5.4"
+PLUGIN.Version = "0.5.3"
 PLUGIN.Description = "Displays a list of mods running on the server, their versions and basic settings."
 
 function PLUGIN:Init()
@@ -121,8 +123,8 @@ function PLUGIN:TimeCalc(tsecs)
     -- dont think we need this kind of resolution
     -- local secs  = math.floor(tsecs - (days*86400) - (hours*3600) - (mins*60));
     local timestring = (
-        days  and (days  > 1 and days  .. " days"    or days  .. " day" ((hours or mins) and " and ")) ..
-        hours and (hours > 1 and hours .. " hours"   or hours .. " hour" (mins and " and ")) ..
+        days  and (days  > 1 and days  .. " days"    or days  .. " day" .. ((hours or mins) and " and ")) ..
+        hours and (hours > 1 and hours .. " hours"   or hours .. " hour" .. (mins and " and ")) ..
         mins  and (mins  > 1 and mins  .. " minutes" or mins  .. " minute")
         )
         -- secs  and (secs  > 1) and secs  .. " seconds" or secs .. " second")
